@@ -99,7 +99,7 @@ app.get('/clients', (req, res) => {
   
 // Get all client reports
 app.get('/client-reports', (req, res) => {
-    connection.query('SELECT post_date,description,amount,balance FROM client_reports', (error, results) => {
+    connection.query('SELECT post_date,description,amount,balance,details FROM client_reports', (error, results) => {
       if (error) {
         res.status(500).json({ error: 'Error retrieving client reports' });
         throw error;
@@ -126,10 +126,10 @@ app.get('/client-reports', (req, res) => {
 
 // Create a new client report
 app.post('/client-reports', (req, res) => {
-  const { report_id, post_date, description, amount, balance, category_id,entry_id } = req.body;
+  const { report_id, post_date, description, amount, balance, category_id,entry_id,details } = req.body;
   connection.query(
-    'INSERT INTO client_reports (report_id, post_date, description, amount, balance, category_id, entry_id) VALUES (?, ?, ?, ?, ?, ?,?)',
-    [report_id, post_date, description, amount, balance, category_id,entry_id],
+    'INSERT INTO client_reports (report_id, post_date, description, amount, balance, category_id,entry_id, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [report_id, post_date, description, amount, balance, category_id,entry_id,details],
     (error, result) => {
       if (error) {
         // Send detailed error message
