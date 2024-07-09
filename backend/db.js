@@ -59,17 +59,21 @@ app.get('/clients', (req, res) => {
     });
   });
   
-  // Create a new client
-  app.post('/clients', (req, res) => {
-    const { client_name, client_report } = req.body;
-    connection.query('INSERT INTO clients (client_name, client_report) VALUES (?, ?)', [client_name, client_report], (error, result) => {
-      if (error) {
-        res.status(500).json({ error: 'Error creating client' });
-        throw error;
-      }
-      res.status(201).json({ message: 'Client created successfully', id: result.insertId });
-    });
+// Create a new client
+app.post('/clients', (req, res) => {
+  const { first_name, last_name, email, report_id } = req.body;
+  connection.query('INSERT INTO client (first_name, last_name, email, report_id) VALUES (?, ?, ?, ?)', [first_name, last_name, email, report_id], (error, result) => {
+    if (error) {
+      // Log the error for debugging
+      console.error('Error creating client:', error);
+      // Send the error response and return to prevent further execution
+      return res.status(500).json({ error: 'Error creating client' });
+    }
+    // Send the success response
+    res.status(201).json({ message: 'Client created successfully', id: result.insertId });
   });
+});
+
   
   // Update client by ID
   app.put('/clients/:id', (req, res) => {
@@ -99,7 +103,7 @@ app.get('/clients', (req, res) => {
   
 // Get all client reports
 app.get('/client-reports', (req, res) => {
-    connection.query('SELECT post_date,description,amount,balance,details FROM client_reports', (error, results) => {
+    connection.query('SELECT post_date,description,amount,balance,details,category_id FROM client_reports', (error, results) => {
       if (error) {
         res.status(500).json({ error: 'Error retrieving client reports' });
         throw error;
@@ -126,10 +130,10 @@ app.get('/client-reports', (req, res) => {
 
 // Create a new client report
 app.post('/client-reports', (req, res) => {
-  const { report_id, post_date, description, amount, balance, category_id,entry_id,details } = req.body;
+  const { report_id, post_date, description, amount, balance, category_id,entry_id,details,client_id } = req.body;
   connection.query(
-    'INSERT INTO client_reports (report_id, post_date, description, amount, balance, category_id,entry_id, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [report_id, post_date, description, amount, balance, category_id,entry_id,details],
+    'INSERT INTO client_reports (report_id, post_date, description, amount, balance, category_id,entry_id, details,client_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)',
+    [report_id, post_date, description, amount, balance, category_id,entry_id,details,client_id],
     (error, result) => {
       if (error) {
         // Send detailed error message
@@ -171,7 +175,133 @@ app.post('/client-reports', (req, res) => {
     });
   });
   
+  // Create a new grocery store
+app.post('/grocery-stores', (req, res) => {
+  const { store_name, store_logo } = req.body;
+  connection.query('INSERT INTO stores (store_name, store_logo) VALUES (?, ?)', [store_name, store_logo], (error, result) => {
+    if (error) {
+      res.status(500).json({ error: 'Error creating grocery store', detailed_error: error.message });
+      return;
+    }
+    res.status(201).json({ message: 'Grocery store created successfully', id: result.insertId });
+  });
+});
 
+// Read all grocery stores
+app.get('/grocery-stores', (req, res) => {
+  connection.query('SELECT * FROM stores WHERE type = "groceries"', (error, results) => {
+    if (error) {
+      res.status(500).json({ error: 'Error retrieving grocery stores', detailed_error: error.message });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Read a grocery store by ID
+app.get('/grocery-stores/:id', (req, res) => {
+  const storeId = req.params.id;
+  connection.query('SELECT * FROM stores WHERE id = ?', [storeId], (error, results) => {
+    if (error) {
+      res.status(500).json({ error: 'Error retrieving grocery store', detailed_error: error.message });
+      return;
+    }
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Grocery store not found' });
+    } else {
+      res.json(results[0]);
+    }
+  });
+});
+
+// Update a grocery store by ID
+app.put('/grocery-stores/:id', (req, res) => {
+  const storeId = req.params.id;
+  const { store_name, store_logo } = req.body;
+  connection.query('UPDATE stores SET store_name = ?, store_logo = ? WHERE id = ?', [store_name, store_logo, storeId], (error, result) => {
+    if (error) {
+      res.status(500).json({ error: 'Error updating grocery store', detailed_error: error.message });
+      return;
+    }
+    res.json({ message: 'Grocery store updated successfully' });
+  });
+});
+
+// Delete a grocery store by ID
+app.delete('/grocery-stores/:id', (req, res) => {
+  const storeId = req.params.id;
+  connection.query('DELETE FROM stores WHERE id = ?', [storeId], (error, result) => {
+    if (error) {
+      res.status(500).json({ error: 'Error deleting grocery store', detailed_error: error.message });
+      return;
+    }
+    res.json({ message: 'Grocery store deleted successfully' });
+  });
+});
+
+// Create a new gas station
+app.post('/gas', (req, res) => {
+  const { store_name, store_logoo } = req.body;
+  connection.query('INSERT INTO stores (store_name, store_logoo) VALUES (?, ?)', [store_name, store_logoo], (error, result) => {
+    if (error) {
+      res.status(500).json({ error: 'Error creating gas station', detailed_error: error.message });
+      return;
+    }
+    res.status(201).json({ message: 'Gas station created successfully', id: result.insertId });
+  });
+});
+
+// Read all gas stations
+app.get('/gas', (req, res) => {
+  connection.query('SELECT * FROM stores WHERE type = "gas"', (error, results) => {
+    if (error) {
+      res.status(500).json({ error: 'Error retrieving gas stations', detailed_error: error.message });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Read a gas station by ID
+app.get('/gas/:id', (req, res) => {
+  const stationId = req.params.id;
+  connection.query('SELECT * FROM stores WHERE id = ?', [stationId], (error, results) => {
+    if (error) {
+      res.status(500).json({ error: 'Error retrieving gas station', detailed_error: error.message });
+      return;
+    }
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Gas station not found' });
+    } else {
+      res.json(results[0]);
+    }
+  });
+});
+
+// Update a gas station by ID
+app.put('/gas/:id', (req, res) => {
+  const stationId = req.params.id;
+  const { store_name, store_logoo } = req.body;
+  connection.query('UPDATE stores SET store_name = ?, store_logoo = ? WHERE id = ?', [store_name, store_logoo, stationId], (error, result) => {
+    if (error) {
+      res.status(500).json({ error: 'Error updating gas station', detailed_error: error.message });
+      return;
+    }
+    res.json({ message: 'Gas station updated successfully' });
+  });
+});
+
+// Delete a gas station by ID
+app.delete('/gas/:id', (req, res) => {
+  const stationId = req.params.id;
+  connection.query('DELETE FROM stores WHERE id = ?', [stationId], (error, result) => {
+    if (error) {
+      res.status(500).json({ error: 'Error deleting gas station', detailed_error: error.message });
+      return;
+    }
+    res.json({ message: 'Gas station deleted successfully' });
+  });
+});
 
 // Define your API endpoints here
 
